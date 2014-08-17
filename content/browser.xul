@@ -113,4 +113,10 @@
   <stringbundle id="gm-browser-bundle" src="chrome://greasemonkey/locale/gm-browser.properties" />
   </stringbundleset>
 
+  <toolbox>
+    <toolbar id="statusbar-toolbar" hidden="true" ondblclick="GM_BrowserUI.removeStatusbar(); event.stopPropagation();">
+      <label id="statusbar-toolbar-label" value=""/>
+    </toolbar>
+  </toolbox>
+
 </overlay>
