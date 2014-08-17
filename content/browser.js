@@ -272,6 +272,13 @@ GM_BrowserUI.checkDisabledScriptNavigation = function(aEvent, aSafeWin, aHref) {
   );
 };
 
+GM_BrowserUI.removeStatusbar = function () {
+
+  document.getElementById("statusbar-toolbar").setAttribute("hidden", "true");
+  document.getElementById("statusbar-toolbar-label").setAttribute("value", "");
+
+}
+
 GM_BrowserUI.init();
 
 
