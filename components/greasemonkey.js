@@ -141,6 +141,10 @@ function createSandbox(
     sandbox.GM_setClipboard = GM_util.hitch(null, GM_setClipboard);
   }
 
+  if (GM_util.inArray(aScript.grants, 'GM_statusbar')) {
+    sandbox.GM_statusbar = GM_util.hitch(null, GM_statusbar, aChromeWin);
+  }
+
   var scriptResources = new GM_Resources(aScript);
   if (GM_util.inArray(aScript.grants, 'GM_getResourceURL')) {
     sandbox.GM_getResourceURL = GM_util.hitch(scriptResources, 'getResourceURL', aScript);
