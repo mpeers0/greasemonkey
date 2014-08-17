@@ -14,6 +14,7 @@ const APIS = [
     'GM_registerMenuCommand',
     'GM_setClipboard',
     'GM_setValue',
+    'GM_statusbar',
     'GM_xmlhttpRequest',
     'unsafeWindow',
     ];
