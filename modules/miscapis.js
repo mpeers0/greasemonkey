@@ -7,7 +7,7 @@ Cu.import("resource://greasemonkey/util.js");
 
 
 var EXPORTED_SYMBOLS = [
-    'GM_addStyle', 'GM_console', 'GM_Resources',
+    'GM_addStyle', 'GM_statusbar', 'GM_console', 'GM_Resources',
     'GM_ScriptLogger', 'GM_ScriptStorage', 'GM_ScriptStoragePrefs'];
 
 
@@ -258,6 +258,59 @@ function GM_addStyle(doc, css) {
     return style;
   }
   return null;
+}
+
+// \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ //
+
+function GM_statusbar(win, what, value) {
+
+  var statusbarToolbarId = "statusbar-toolbar";
+  var statusbarToolbarLabelId = "statusbar-toolbar-label";
+
+  var winDocElements = true;
+  if (!win ||
+      !win.document ||
+      !win.document.getElementById(statusbarToolbarId) ||
+      !win.document.getElementById(statusbarToolbarLabelId))
+    winDocElements = false;
+
+  var result = null;
+
+  switch (what.toString().toLowerCase()) {
+    case "0":
+    case "get":
+      if (!winDocElements ||
+          (win.document.getElementById(statusbarToolbarId).getAttribute("hidden").toLowerCase() === "true"))
+        result = false;
+      else
+        result = win.document.getElementById(statusbarToolbarLabelId).getAttribute("value");
+      break;
+    case "1":
+    case "set":
+      if (!winDocElements)
+        result = false;
+      else {
+        if (value)
+          win.document.getElementById(statusbarToolbarLabelId).setAttribute("value", String(value));
+        win.document.getElementById(statusbarToolbarId).setAttribute("hidden", "false");
+        result = true;
+      }
+      break;
+    case "2":
+    case "remove":
+      if (!winDocElements ||
+          (win.document.getElementById(statusbarToolbarId).getAttribute("hidden").toLowerCase() === "true"))
+        result = false;
+      else {
+        win.document.getElementById(statusbarToolbarId).setAttribute("hidden", "true");
+        win.document.getElementById(statusbarToolbarLabelId).setAttribute("value", "");
+        result = true;
+      }
+      break;
+  }
+
+  return result;
+
 }
 
 // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ //
