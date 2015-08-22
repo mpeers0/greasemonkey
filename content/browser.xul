@@ -114,7 +114,8 @@
   </stringbundleset>
 
   <toolbox>
-    <toolbar id="statusbar-toolbar" hidden="true" ondblclick="GM_BrowserUI.removeStatusbar(); event.stopPropagation();">
+    <toolbar id="statusbar-toolbar" hidden="true"
+        ondblclick="GM_BrowserUI.removeStatusbar(); event.stopPropagation();">
       <label id="statusbar-toolbar-label" value=""/>
     </toolbar>
   </toolbox>
