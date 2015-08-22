@@ -7,8 +7,8 @@ Cu.import("resource://greasemonkey/util.js");
 
 
 var EXPORTED_SYMBOLS = [
-    'GM_addStyle', 'GM_statusbar', 'GM_console', 'GM_Resources',
-    'GM_ScriptLogger', 'GM_ScriptStorage', 'GM_ScriptStoragePrefs'];
+    'GM_addStyle', 'GM_console', 'GM_Resources', 'GM_ScriptLogger',
+    'GM_ScriptStorage', 'GM_ScriptStoragePrefs', 'GM_statusbar'];
 
 
 function GM_ScriptStorage(script) {
@@ -271,8 +271,9 @@ function GM_statusbar(win, what, value) {
   if (!win ||
       !win.document ||
       !win.document.getElementById(statusbarToolbarId) ||
-      !win.document.getElementById(statusbarToolbarLabelId))
+      !win.document.getElementById(statusbarToolbarLabelId)) {
     winDocElements = false;
+  }
 
   var result = null;
 
@@ -280,30 +281,39 @@ function GM_statusbar(win, what, value) {
     case "0":
     case "get":
       if (!winDocElements ||
-          (win.document.getElementById(statusbarToolbarId).getAttribute("hidden").toLowerCase() === "true"))
+          (win.document.getElementById(statusbarToolbarId)
+          .getAttribute("hidden").toLowerCase() === "true")) {
         result = false;
-      else
-        result = win.document.getElementById(statusbarToolbarLabelId).getAttribute("value");
+      } else {
+        result = win.document.getElementById(statusbarToolbarLabelId)
+            .getAttribute("value");
+      }
       break;
     case "1":
     case "set":
-      if (!winDocElements)
+      if (!winDocElements) {
         result = false;
-      else {
-        if (value)
-          win.document.getElementById(statusbarToolbarLabelId).setAttribute("value", String(value));
-        win.document.getElementById(statusbarToolbarId).setAttribute("hidden", "false");
+      } else {
+        if (value) {
+          win.document.getElementById(statusbarToolbarLabelId)
+              .setAttribute("value", String(value));
+        }
+        win.document.getElementById(statusbarToolbarId)
+            .setAttribute("hidden", "false");
         result = true;
       }
       break;
     case "2":
     case "remove":
       if (!winDocElements ||
-          (win.document.getElementById(statusbarToolbarId).getAttribute("hidden").toLowerCase() === "true"))
+          (win.document.getElementById(statusbarToolbarId)
+              .getAttribute("hidden").toLowerCase() === "true")) {
         result = false;
-      else {
-        win.document.getElementById(statusbarToolbarId).setAttribute("hidden", "true");
-        win.document.getElementById(statusbarToolbarLabelId).setAttribute("value", "");
+      } else {
+        win.document.getElementById(statusbarToolbarId)
+            .setAttribute("hidden", "true");
+        win.document.getElementById(statusbarToolbarLabelId)
+            .setAttribute("value", "");
         result = true;
       }
       break;
