@@ -1,5 +1,10 @@
 var EXPORTED_SYMBOLS = ['logError'];
 
+Components.utils.import("chrome://greasemonkey-modules/content/miscapis.js");
+
+var cpmm = Components.classes["@mozilla.org/childprocessmessagemanager;1"]
+    .getService(Components.interfaces.nsISyncMessageSender);
+
 var consoleService = Components.classes["@mozilla.org/consoleservice;1"]
     .getService(Components.interfaces.nsIConsoleService);
 
@@ -13,4 +18,23 @@ function logError(e, opt_warn, fileName, lineNumber) {
   consoleError.init(e.message, fileName, null, lineNumber, e.columnNumber,
       (opt_warn ? 1 : 0), null);
   consoleService.logMessage(consoleError);
+
+  if (WebConsole.Messages) {
+    var webConsoleError = new WebConsole.Messages.Simple(e.message, {
+      "category": "js",
+      "location": {
+        "column": e.columnNumber,
+        "line": lineNumber,
+        "url": fileName
+      },
+      "severity": (opt_warn ? "warning" : "error")
+    });
+
+    cpmm.sendSyncMessage("greasemonkey:web-console-log", {
+        "functionName": "GM_util." + logError.name
+      }, {
+        "message": webConsoleError
+      }
+    );
+  }
 }

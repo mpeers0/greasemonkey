@@ -74,6 +74,8 @@ function startup(aService) {
   parentMessageManager.addMessageListener(
       'greasemonkey:scripts-for-uuid',
       aService.getScriptsForUuid.bind(aService));
+  parentMessageManager.addMessageListener(
+      'greasemonkey:web-console-log', aService.webConsoleLog.bind(aService));
   var mm = Services.ppmm ? Services.ppmm : globalMessageManager;
   mm.addMessageListener(
       'greasemonkey:url-is-temp-file', aService.urlIsTempFile.bind(aService));
@@ -219,6 +221,23 @@ service.prototype.urlIsTempFile = function(aMessage) {
     return false;
   }
   return gTmpDir.contains(file);
+};
+
+service.prototype.webConsoleLog = function(aMessage) {
+  var chromeWin = GM_util.getBrowserWindow();
+
+  if (chromeWin && chromeWin.gBrowser) {
+    var hud = WebConsole.getWebConsole(chromeWin.gBrowser.selectedTab);
+    if (hud) {
+      try {
+        hud.ui.output.addMessage(aMessage.objects.message);
+      } catch (e) {
+        GM_util.logError("WebConsole error ("
+            + aMessage.data.functionName
+            + "): " + e);
+      }
+    }
+  }
 };
 
 //////////////////////////// Component Registration ////////////////////////////

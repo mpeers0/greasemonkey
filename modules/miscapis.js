@@ -8,7 +8,45 @@ Cu.import("chrome://greasemonkey-modules/content/util.js");
 
 
 var EXPORTED_SYMBOLS = [
-    'GM_addStyle', 'GM_console', 'GM_Resources', 'GM_ScriptLogger'];
+    'GM_addStyle', 'GM_console', 'GM_Resources', 'GM_ScriptLogger',
+    'WebConsole'];
+
+var cpmm = Components.classes["@mozilla.org/childprocessmessagemanager;1"]
+    .getService(Components.interfaces.nsISyncMessageSender);
+
+// \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ //
+
+function WebConsole() {}
+
+var {gDevTools} = Cu.import(
+    "resource:///modules/devtools/gDevTools.jsm", {});
+var {devtools} = Cu.import(
+    "resource://gre/modules/devtools/Loader.jsm", {});
+
+var webConsoleSupport = true;
+try {
+  // Firefox < 25 (i.e. PaleMoon)
+  var {_Messages} = devtools.require(
+      "devtools/webconsole/console-output");
+} catch (e) {
+  webConsoleSupport = false;
+}
+
+if (webConsoleSupport) {
+  var {Messages} = devtools.require(
+      "devtools/webconsole/console-output");
+
+  WebConsole.Messages = Messages;
+
+  WebConsole.getWebConsole = function (tab) {
+    if (!tab || !devtools.TargetFactory.isKnownTab(tab)) return null;
+    var target = devtools.TargetFactory.forTab(tab);
+    // gDevTools.showToolbox(target, "webconsole");
+    var toolbox = gDevTools.getToolbox(target);
+    var panel = toolbox ? toolbox.getPanel("webconsole") : null;
+    return panel ? panel.hud : null;
+  }
+}
 
 // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ //
 
@@ -58,9 +96,26 @@ GM_ScriptLogger.prototype.consoleService = Components
     .classes["@mozilla.org/consoleservice;1"]
     .getService(Components.interfaces.nsIConsoleService);
 
-GM_ScriptLogger.prototype.log = function(message) {
-  // https://developer.mozilla.org/en-US/docs/XPCOM_Interface_Reference/nsIConsoleService#logStringMessage() - wstring / wide string
-  this.consoleService.logStringMessage((this.prefix + '\n' + message).replace(/\0/g, ''));
+GM_ScriptLogger.prototype.log = function log(message) {
+  // https://developer.mozilla.org/en-US/docs/XPCOM_Interface_Reference/nsIConsoleService#logStringMessage()
+  // - wstring / wide string
+  message = (this.prefix + '\n' + message).replace(/\0/g, "");
+
+  this.consoleService.logStringMessage(message);
+
+  if (WebConsole.Messages) {
+    var message = new WebConsole.Messages.Simple(message.replace(/\n/g, ""), {
+      "category": "js",
+      "severity": "log"
+    });
+
+    cpmm.sendSyncMessage("greasemonkey:web-console-log", {
+        "functionName": "GM_" + GM_ScriptLogger.prototype.log.name
+      }, {
+        "message": message
+      }
+    );
+  }
 };
 
 // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ //
