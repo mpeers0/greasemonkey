@@ -232,7 +232,8 @@ service.prototype.webConsoleLog = function(aMessage) {
       try {
         hud.ui.output.addMessage(aMessage.objects.message);
       } catch (e) {
-        GM_util.logError("WebConsole error ("
+        GM_util.logError(
+            "WebConsole error ("
             + aMessage.data.functionName
             + "): " + e);
       }
