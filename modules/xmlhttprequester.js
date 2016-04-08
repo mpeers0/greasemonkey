@@ -12,7 +12,8 @@ var gStringBundle = Components
 Components.utils.importGlobalProperties(['XMLHttpRequest']);
 
 
-function GM_xmlhttpRequester(wrappedContentWin, originUrl, sandbox) {
+function GM_xmlhttpRequester(
+    wrappedContentWin, originUrl, sandbox, scriptFileUrl) {
   this.wrappedContentWin = wrappedContentWin;
   this.originUrl = originUrl;
   this.sandbox = sandbox;
@@ -21,6 +22,7 @@ function GM_xmlhttpRequester(wrappedContentWin, originUrl, sandbox) {
   // use an older version without this check, so skipping is no worse.
   this.sandboxPrincipal = 'function' == typeof Components.utils.getObjectPrincipal
       ? Components.utils.getObjectPrincipal(sandbox) : null;
+  this.scriptFileUrl = scriptFileUrl;
 }
 
 // this function gets called by user scripts in content security scope to
@@ -103,7 +105,8 @@ GM_xmlhttpRequester.prototype.contentStartRequest = function(details) {
 GM_xmlhttpRequester.prototype.chromeStartRequest =
 function(safeUrl, details, req) {
   var setupRequestEvent = GM_util.hitch(
-      this, 'setupRequestEvent', this.wrappedContentWin, this.sandbox);
+      this, 'setupRequestEvent', this.wrappedContentWin, this.sandbox,
+      this.scriptFileUrl);
 
   setupRequestEvent(req, "abort", details);
   setupRequestEvent(req, "error", details);
@@ -195,7 +198,7 @@ function(safeUrl, details, req) {
 // method by the same name which is a property of 'details' in the content
 // window's security context.
 GM_xmlhttpRequester.prototype.setupRequestEvent =
-function(wrappedContentWin, sandbox, req, event, details) {
+function(wrappedContentWin, sandbox, scriptFileUrl, req, event, details) {
   // Waive Xrays so that we can read callback function properties ...
   details = Components.utils.waiveXrays(details);
   var eventCallback = details["on" + event];
@@ -240,7 +243,16 @@ function(wrappedContentWin, sandbox, req, event, details) {
     }
     if (responseXML) {
       // Clone the XML object into a content-window-scoped document.
-      var xmlDoc = new wrappedContentWin.Document();
+      try {
+        var xmlDoc = new wrappedContentWin.Document();
+      } catch (e) {
+        try {
+          req.abort();
+        } catch (e) {
+          GM_util.logError(details.url + ": " + e, true, scriptFileUrl, null);
+        }
+        return;
+      }
       var clone = xmlDoc.importNode(responseXML.documentElement, true);
       xmlDoc.appendChild(clone);
       responseState.responseXML = xmlDoc;
@@ -279,6 +291,11 @@ function(wrappedContentWin, sandbox, req, event, details) {
     }, sandbox, {cloneFunctions: true, wrapReflectors: true});
 
     if (GM_util.windowIsClosed(wrappedContentWin)) {
+      try {
+        req.abort();
+      } catch (e) {
+        GM_util.logError(details.url + ": " + e, true, scriptFileUrl, null);
+      }
       return;
     }
 

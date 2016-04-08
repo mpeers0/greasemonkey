@@ -119,7 +119,7 @@ function createSandbox(aScript, aContentWin, aUrl, aFrameScope) {
 
   if (GM_util.inArray(aScript.grants, 'GM_xmlhttpRequest')) {
     sandbox.GM_xmlhttpRequest = GM_util.hitch(
-        new GM_xmlhttpRequester(aContentWin, aUrl, sandbox),
+        new GM_xmlhttpRequester(aContentWin, aUrl, sandbox, aScript.fileURL),
         'contentStartRequest');
   }
 
