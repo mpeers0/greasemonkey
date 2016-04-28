@@ -135,9 +135,17 @@ function injectGMInfo(aScript, sandbox, aContentWin) {
 
   rawInfo.isIncognito = GM_util.windowIsPrivate(aContentWin);
   rawInfo.isPrivate = rawInfo.isIncognito;
-  
-  // TODO: also delay top level clone via lazy getter? XPCOMUtils.defineLazyGetter
-  sandbox.GM_info = Cu.cloneInto(rawInfo, sandbox);
+
+  // Firefox < 30 (i.e. PaleMoon)
+  try {
+    // TODO: also delay top level clone via lazy getter? XPCOMUtils.defineLazyGetter
+    sandbox.GM_info = Cu.cloneInto(rawInfo, sandbox);
+  } catch (e) {
+    if (!sandbox.GM_info) {
+      Components.utils.evalInSandbox(
+          "const GM_info = " + uneval(rawInfo) + ";", sandbox);
+    }
+  }
 
   var waivedInfo = Components.utils.waiveXrays(sandbox.GM_info);
   var fileCache = new Map();
@@ -160,14 +168,20 @@ function injectGMInfo(aScript, sandbox, aContentWin) {
     return meta;
   }
 
+  // Firefox < 30 (i.e. PaleMoon)
   // lazy getters for heavyweight strings that aren't sent down through IPC
   Object.defineProperty(waivedInfo, "scriptSource", {
-    get: Cu.exportFunction(getScriptSource, sandbox)
+    get: Cu.exportFunction
+        ? Cu.exportFunction(getScriptSource, sandbox)
+        : getScriptSource
   });
 
+  // Firefox < 30 (i.e. PaleMoon)
   // meta depends on content, so we need a lazy one here too
   Object.defineProperty(waivedInfo, 'scriptMetaStr', {
-    get: Cu.exportFunction(getMeta, sandbox)
+    get: Cu.exportFunction
+        ? Cu.exportFunction(getMeta, sandbox)
+        : getMeta
   });
 }
 

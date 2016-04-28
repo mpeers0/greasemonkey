@@ -3,6 +3,48 @@ var EXPORTED_SYMBOLS = ['GM_util'];
 var Cu = Components.utils;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
+// Firefox < 39 (i.e. PaleMoon)
+// https://bugzilla.mozilla.org/show_bug.cgi?id=1068087
+// Forward compatibility
+// See https://github.com/greasemonkey/greasemonkey/commit/58b25c58d5940eee4bc6035aed135265fec4183e
+var Cc = Components.classes;
+var Ci = Components.interfaces;
+Cu.import("resource://gre/modules/Services.jsm");
+if (!Services.hasOwnProperty("mm")) {
+  XPCOMUtils.defineLazyGetter(Services, "mm", () => {
+    return Cc["@mozilla.org/globalmessagemanager;1"]
+        .getService(Ci.nsIMessageBroadcaster)
+        .QueryInterface(Ci.nsIFrameScriptLoader);
+  });
+}
+if (!Services.hasOwnProperty("ppmm")) {
+  XPCOMUtils.defineLazyGetter(Services, "ppmm", () => {
+    // Firefox < 38 (i.e. PaleMoon)
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=1133594
+    // See #2267
+    try {
+      return Cc["@mozilla.org/parentprocessmessagemanager;1"]
+          .getService(Ci.nsIMessageBroadcaster)
+          .QueryInterface(Ci.nsIProcessScriptLoader);
+    } catch (e) {
+      return Cc["@mozilla.org/parentprocessmessagemanager;1"]
+          // .getService(Ci.nsIMessageListenerManager);
+          .getService(Ci.nsIMessageBroadcaster);
+    }
+  });
+}
+if (!Services.hasOwnProperty("cpmm")) {
+  XPCOMUtils.defineLazyServiceGetter(
+      Services, "cpmm", "@mozilla.org/childprocessmessagemanager;1",
+      "nsIMessageSender");
+  // Firefox < 38 (i.e. PaleMoon)
+  if (!Services.cpmm.sendSyncMessage) {
+    XPCOMUtils.defineLazyServiceGetter(
+        Services, "cpmm", "@mozilla.org/childprocessmessagemanager;1",
+        "nsISyncMessageSender");
+  }
+}
+
 /*
 This "util" module separates all the methods into individual files, and lazily
 imports them automatically, the first time each method is called.  Simply import

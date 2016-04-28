@@ -12,12 +12,25 @@ addons.GM_addonsStartup();
 
 // Open the scripts manager in Firefox >= 4.0
 function GM_OpenScriptsMgr() {
-  BrowserOpenAddonsMgr('addons://list/greasemonkey-user-script');
+  // SeaMonkey
+  var _sm_pm_browserWin = Services.wm.getMostRecentWindow("navigator:browser");
+  if (_sm_pm_browserWin.BrowserOpenAddonsMgr) {
+    _sm_pm_browserWin
+        .BrowserOpenAddonsMgr("addons://list/greasemonkey-user-script");
+  } else if (_sm_pm_browserWin.toEM) {
+    _sm_pm_browserWin.toEM("addons://list/greasemonkey-user-script");
+  }
 }
 
 // Open the updates manager in Firefox >= 4.0
 function GM_OpenUpdatesMgr() {
-    BrowserOpenAddonsMgr('addons://updates/available');
+  // SeaMonkey
+  var _sm_pm_browserWin = Services.wm.getMostRecentWindow("navigator:browser");
+  if (_sm_pm_browserWin.BrowserOpenAddonsMgr) {
+    _sm_pm_browserWin.BrowserOpenAddonsMgr("addons://updates/available");
+  } else if (_sm_pm_browserWin.toEM) {
+    _sm_pm_browserWin.toEM("addons://updates/available");
+  }
 }
 ]]></script>
 </overlay>

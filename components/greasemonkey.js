@@ -31,6 +31,9 @@ var gTmpDir = Components.classes["@mozilla.org/file/directory_service;1"]
     .getService(Components.interfaces.nsIProperties)
     .get("TmpD", Components.interfaces.nsIFile);
 
+// PaleMoon
+var _sm_pm_gPalemoonId = "{8de7fcbb-c55c-4fbe-bfc5-fc555c87dbc4}";
+
 /////////////////////// Component-global Helper Functions //////////////////////
 
 function shutdown(aService) {
@@ -71,6 +74,10 @@ function startup(aService) {
       'greasemonkey:scripts-update', function(message) {
         return aService.scriptUpdateData();
       });
+  // PaleMoon
+  if (Services.appinfo.ID == _sm_pm_gPalemoonId) {
+    parentMessageManager = globalMessageManager;
+  }
   parentMessageManager.addMessageListener(
       'greasemonkey:script-install', aService.scriptInstall.bind(aService));
   parentMessageManager.addMessageListener(
@@ -231,7 +238,13 @@ service.prototype.handleScriptValMsg = function(aMessage) {
 };
 
 service.prototype.scriptInstall = function(aMessage) {
-  GM_util.showInstallDialog(aMessage.data.url);
+  // PaleMoon
+  if (Services.appinfo.ID != _sm_pm_gPalemoonId) {
+    GM_util.showInstallDialog(aMessage.data.url);
+  } else {
+    GM_util.showInstallDialog(
+        aMessage.data.url, aMessage.target, aMessage.data.referer);
+  }
 };
 
 service.prototype.urlIsTempFile = function(aMessage) {
@@ -240,7 +253,13 @@ service.prototype.urlIsTempFile = function(aMessage) {
   } catch (e) {
     return false;
   }
-  return gTmpDir.contains(file);
+  // Firefox < 32 (i.e. PaleMoon)
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=997141
+  try {
+    return gTmpDir.contains(file);
+  } catch (e) {
+    return gTmpDir.contains(file, true);
+  }
 };
 
 //////////////////////////// Component Registration ////////////////////////////

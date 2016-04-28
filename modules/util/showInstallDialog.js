@@ -42,17 +42,27 @@ function showInstallDialog(aUrlOrRemoteScript, aBrowser, aRequest) {
     });
   }
 
+  // PaleMoon
+  var _sm_pm_browser = browser;
   rs.download(function(aSuccess, aType) {
-    if (aRequest && 'script' == aType) {
-      if (aSuccess) {
-        aRequest.cancel(Components.results.NS_BINDING_ABORTED);
-        var browser = aRequest
-            .QueryInterface(Ci.nsIHttpChannel)
-            .notificationCallbacks.getInterface(Ci.nsILoadContext)
-            .topFrameElement;
-        browser.webNavigation.stop(Ci.nsIWebNavigation.STOP_ALL);
-      } else {
-        aRequest.resume();
+    if (aRequest instanceof Ci.nsIRequest) {
+      if (aRequest && 'script' == aType) {
+        if (aSuccess) {
+          aRequest.cancel(Components.results.NS_BINDING_ABORTED);
+          var browser = aRequest
+              .QueryInterface(Ci.nsIHttpChannel)
+              .notificationCallbacks.getInterface(Ci.nsILoadContext)
+              .topFrameElement;
+          browser.webNavigation.stop(Ci.nsIWebNavigation.STOP_ALL);
+        } else {
+          aRequest.resume();
+        }
+      }
+    } else {
+      if (!aSuccess && 'script' == aType) {
+        _sm_pm_browser.messageManager.sendAsyncMessage(
+            "greasemonkey:_sm_pm_load-failed-script",
+            {"referer": aRequest, "url": rs.url});
       }
     }
   });

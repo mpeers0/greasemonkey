@@ -591,13 +591,20 @@ RemoteScript.prototype._downloadFile = function(
     }
   }
 
-  // Construct a channel with a policy type that the HTTP observer is
-  // designed to ignore, so it won't intercept this network call.
-  var channel = NetUtil.newChannel({
-    'uri': aUri,
-    'contentPolicyType': Ci.nsIContentPolicy.TYPE_OBJECT_SUBREQUEST,
-    'loadUsingSystemPrincipal': true,
-  });
+  // Firefox < 38 (i.e. PaleMoon)
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1125618
+  try {
+    // Construct a channel with a policy type that the HTTP observer is
+    // designed to ignore, so it won't intercept this network call.
+    var channel = NetUtil.newChannel({
+      'uri': aUri,
+      'contentPolicyType': Ci.nsIContentPolicy.TYPE_OBJECT_SUBREQUEST,
+      'loadUsingSystemPrincipal': true,
+    });
+  } catch (e) {
+    var channel = GM_util.channelFromUri(aUri);
+    channel.loadFlags |= channel.LOAD_BYPASS_CACHE;
+  }
   this._channels.push(channel);
   var dsl = new DownloadListener(
       0 == this._progressIndex,  // aTryToParse

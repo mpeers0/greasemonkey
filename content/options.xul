@@ -2,7 +2,8 @@
 
 <!DOCTYPE prefwindow [
 <!ENTITY % greasemonkeyDTD SYSTEM "chrome://greasemonkey/locale/greasemonkey.dtd">
-<!ENTITY % preferencesDTD SYSTEM "chrome://browser/locale/preferences/preferences.dtd">
+<!-- SeaMonkey -->
+<!ENTITY % preferencesDTD SYSTEM "chrome://global/locale/preferences.dtd">
 %greasemonkeyDTD;
 %preferencesDTD;
 ]>
@@ -10,8 +11,9 @@
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?>
 <?xml-stylesheet href="chrome://greasemonkey/skin/bindings.css" type="text/css"?>
 <?xml-stylesheet href="chrome://greasemonkey/skin/options.css" type="text/css"?>
+<!-- SeaMonkey -->
 <dialog
-  title="Greasemonkey - &prefWindow.titleWin;"
+  title="Greasemonkey - &preferencesDefaultTitleWin.title;"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   buttons="accept,cancel"
   flex="1"
@@ -24,11 +26,13 @@
 >
 <script type="application/x-javascript" src="chrome://greasemonkey/content/options.js" />
 
-<dialogheader title="Greasemonkey" description="&prefWindow.titleWin;"/>
+<!-- SeaMonkey -->
+<dialogheader title="Greasemonkey" description="&preferencesDefaultTitleWin.title;"/>
 
 <vbox flex="1">
   <groupbox>
-    <caption label="&prefWindow.titleWin;" />
+    <!-- SeaMonkey -->
+    <caption label="&preferencesDefaultTitleWin.title;" />
     <checkbox id="secure-update" label="&RequireSecureUpdates;" />
     <checkbox id="submit-stats" label="&SubmitStats;" />
     <checkbox id="check-sync" label="&EnableFirefoxSync;" />

@@ -1,7 +1,8 @@
 window.addEventListener('load', function() {
   var args = window.arguments;
   if (!args) return;
-  if (!(args[0] instanceof Ci.nsIDialogParamBlock)) return;
+  // SeaMonkey
+  if (!(args[0] instanceof Components.interfaces.nsIDialogParamBlock)) return;
   args = args[0].GetString(1);
   if (!args) return;
   args = JSON.parse(args);

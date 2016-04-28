@@ -7,5 +7,8 @@ function compareFirefoxVersion(aTarget) {
       .classes["@mozilla.org/xpcom/version-comparator;1"]
       .getService(Components.interfaces.nsIVersionComparator);
 
-  return versionChecker.compare(appInfo.version, aTarget);
+  // SeaMonkey
+  return versionChecker.compare(
+      (versionChecker.compare(appInfo.version, "35.0") >= 0)
+      ? appInfo.version : appInfo.platformVersion, aTarget);
 }

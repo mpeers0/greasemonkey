@@ -65,7 +65,31 @@ GM_BrowserUI.openTab = function(url) {
 GM_BrowserUI.openInTab = function(aMessage) {
   var browser = aMessage.target;
   var tabBrowser = browser.getTabBrowser();
-  var scriptTab = tabBrowser.getTabForBrowser(browser);
+  // PaleMoon
+  var scriptTab = null;
+  if (tabBrowser.getTabForBrowser) { 
+    scriptTab = tabBrowser.getTabForBrowser(browser);
+  } else if (tabBrowser._getTabForBrowser) {
+    // Firefox >= 23, Firefox < 35 (i.e. PaleMoon)
+    // https://bugzilla.mozilla.org/show_bug.cgi?id=662008
+    scriptTab = tabBrowser._getTabForBrowser(browser);
+  }
+  // SeaMonkey
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1149775
+  if (!scriptTab || !scriptTab._tPos) {  
+    var _sm_pm_windowTabs = browser.ownerDocument.defaultView.getBrowser().tabs;
+    var _sm_pm_windowTab = null;
+    for (var _sm_pm_tabIndex = 0,
+        _sm_pm_windowTabsLength = _sm_pm_windowTabs.length;
+        _sm_pm_tabIndex < _sm_pm_windowTabsLength; _sm_pm_tabIndex++) {
+      _sm_pm_windowTab = _sm_pm_windowTabs[_sm_pm_tabIndex];
+      if (_sm_pm_windowTab.linkedBrowser == browser) {
+        scriptTab = _sm_pm_windowTab;
+        scriptTab._tPos = _sm_pm_tabIndex;
+        break;
+      }
+    }
+  }
   var scriptTabIsCurrentTab = scriptTab == tabBrowser.mCurrentTab;
   // Work around a race condition in Firefox code with E10S disabled.
   // See #2107 and #2234
@@ -136,8 +160,19 @@ GM_BrowserUI.getUserScriptUrlUnderPointer = function(callback) {
   };
   mm.addMessageListener("greasemonkey:context-menu-end", messageHandler);
 
+  // Firefox < 25 (i.e. PaleMoon)
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=870180
+  var _sm_pm_href = "";
+  if (document.popupNode) {
+    while (culprit && culprit.tagName
+        && culprit.tagName.toLowerCase() != "a") {
+      culprit = culprit.parentNode;
+    }
+    _sm_pm_href = culprit.href;
+  }
   mm.sendAsyncMessage(
-      "greasemonkey:context-menu-start", {}, {"culprit": culprit});
+      "greasemonkey:context-menu-start",
+      {"href": _sm_pm_href}, {"culprit": culprit});
 };
 
 GM_BrowserUI.refreshStatus = function() {

@@ -7,8 +7,16 @@
 
 var EXPORTED_SYMBOLS = ['addFrame'];
 
-// Each (child) process needs to handle navigation to `.user.js` via file://.
-Components.utils.import("chrome://greasemonkey-modules/content/installPolicy.js");
+// PaleMoon
+Components.utils.import("resource://gre/modules/Services.jsm");
+Components.utils.import("chrome://greasemonkey-modules/content/third-party/extended.js");
+
+// PaleMoon
+var _sm_pm_gPalemoonId = "{8de7fcbb-c55c-4fbe-bfc5-fc555c87dbc4}";
+if (Services.appinfo.ID != _sm_pm_gPalemoonId) {
+  // Each (child) process needs to handle navigation to `.user.js` via file://.
+  Components.utils.import("chrome://greasemonkey-modules/content/installPolicy.js");
+}
 
 // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ //
 
@@ -22,7 +30,9 @@ function urlsOfAllFrames(contentWindow) {
   function collect(contentWindow) {
     urls = urls.concat(urlsOfAllFrames(contentWindow));
   }
-  Array.from(contentWindow.frames).forEach(collect);
+  // Firefox < 32 (i.e. PaleMoon)
+  var _sm_pm_tmp = contentWindow.frames;
+  (Array.from ? Array.from(_sm_pm_tmp) : _Array.from(_sm_pm_tmp)).forEach(collect);
   return urls;
 }
 

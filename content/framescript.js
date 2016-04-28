@@ -5,6 +5,8 @@ var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 
+// PaleMoon
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import('resource://gre/modules/XPCOMUtils.jsm');
 
 Cu.import('chrome://greasemonkey-modules/content/documentObserver.js');
@@ -18,6 +20,11 @@ Cu.import('chrome://greasemonkey-modules/content/util.js');
 
 Cu.import('chrome://greasemonkey-modules/content/processScript.js', {})
     .addFrame(this);
+// PaleMoon
+var _sm_pm_gPalemoonId = "{8de7fcbb-c55c-4fbe-bfc5-fc555c87dbc4}";
+if (Services.appinfo.ID == _sm_pm_gPalemoonId) {
+  Cu.import("chrome://greasemonkey-modules/content/installPolicy.js");
+}
 
 // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ //
 
@@ -121,11 +128,33 @@ function injectScripts(aScripts, aContentWin) {
 }
 
 
-function contextMenuStart(aMessage) {
-  var culprit = aMessage.objects.culprit;
+// PaleMoon
+function _sm_pm_loadFailedScript(aMessage) {
+  var url = aMessage.data.url;
+  var loadFlags = Ci.nsIWebNavigation.LOAD_FLAGS_NONE;
+  var referer = aMessage.data.referer
+      && GM_util.uriFromUrl(aMessage.data.referer);
+  var postData = null;
+  var headers = null;
 
-  while (culprit && culprit.tagName && culprit.tagName.toLowerCase() != "a") {
-    culprit = culprit.parentNode;
+  var webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
+
+  _sm_pm_passNextScript();
+  webNav.loadURI(url, loadFlags, referer, postData, headers);
+}
+
+
+function contextMenuStart(aMessage) {
+  // Firefox < 25 (i.e. PaleMoon)
+  if (Object.keys(aMessage.objects).length > 0) {
+    var culprit = aMessage.objects.culprit;
+
+    while (culprit && culprit.tagName && culprit.tagName.toLowerCase() != "a") {
+      culprit = culprit.parentNode;
+    }
+  } else {
+    var culprit = {};
+    culprit.href = aMessage.data.href;
   }
 
   aMessage.target.sendAsyncMessage(
@@ -194,6 +223,8 @@ addEventListener('DOMWindowCreated', windowCreated);
 if (content) windowCreated();
 
 addMessageListener('greasemonkey:inject-delayed-script', injectDelayedScript);
+// PaleMoon
+addMessageListener('greasemonkey:_sm_pm_load-failed-script', _sm_pm_loadFailedScript);
 addMessageListener('greasemonkey:menu-command-list', function(aMessage) {
   MenuCommandListRequest(content, aMessage);
 });

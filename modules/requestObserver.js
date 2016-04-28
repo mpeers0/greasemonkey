@@ -22,32 +22,57 @@ var gContentTypes = Ci.nsIContentPolicy;
 function checkScriptRefresh(channel) {
   // .loadInfo is part of nsiChannel -> implicit QI needed
   if (!(channel instanceof Components.interfaces.nsIChannel)) return;
-  if (!channel.loadInfo) return;
+  // Firefox < 35 (i.e. PaleMoon)
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1038756
+  var browser = null;
+  if (channel.loadInfo) {
+    // See http://bugzil.la/1182571
+    var type = channel.loadInfo.externalContentPolicyType
+        ? channel.loadInfo.externalContentPolicyType
+        : channel.loadInfo.contentPolicyType;
 
-  // See http://bugzil.la/1182571
-  var type = channel.loadInfo.externalContentPolicyType
-      ? channel.loadInfo.externalContentPolicyType
-      : channel.loadInfo.contentPolicyType;
+    // only check for updated scripts when tabs/iframes are loaded 
+    if (type != gContentTypes.TYPE_DOCUMENT
+        && type != gContentTypes.TYPE_SUBDOCUMENT
+    ) {
+      return;
+    }
 
-  // only check for updated scripts when tabs/iframes are loaded
-  if (type != gContentTypes.TYPE_DOCUMENT
-      && type != gContentTypes.TYPE_SUBDOCUMENT
-  ) {
-    return;
+    // forward compatibility: https://bugzilla.mozilla.org/show_bug.cgi?id=1124477
+    browser = channel.loadInfo.topFrameElement;
   }
-
-  // forward compatibility: https://bugzilla.mozilla.org/show_bug.cgi?id=1124477
-  var browser = channel.loadInfo.topFrameElement;
 
   if (!browser && channel.notificationCallbacks) {
-    // current API: https://bugzilla.mozilla.org/show_bug.cgi?id=1123008#c7
-    var loadCtx = channel.notificationCallbacks.QueryInterface(
-        Components.interfaces.nsIInterfaceRequestor).getInterface(
-        Components.interfaces.nsILoadContext);
-    browser = loadCtx.topFrameElement;
+    // Firefox < 38 (i.e. PaleMoon)
+    try {
+      // current API: https://bugzilla.mozilla.org/show_bug.cgi?id=1123008#c7
+      var loadCtx = channel.notificationCallbacks.QueryInterface(
+          Components.interfaces.nsIInterfaceRequestor).getInterface(
+          Components.interfaces.nsILoadContext);
+      browser = loadCtx.topFrameElement;
+    } catch (e) {
+      // Determine if this is an XHR request.
+      var _sm_pm_isXhr = false;
+      try {
+        _sm_pm_isXhr = !!channel.notificationCallbacks
+            .getInterface(Ci.nsIXMLHttpRequest);
+      } catch (e) {
+        // Ignore.
+      }
+      if (_sm_pm_isXhr) {
+        return;
+      }
+    }
   }
 
-  var windowId = channel.loadInfo.innerWindowID;
+  // Firefox < 37 (i.e. PaleMoon)
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=1107638
+  var windowId = null;
+  try {
+    windowId = channel.loadInfo.innerWindowID;
+  } catch (e) {
+    // Ignore.
+  }
 
   GM_util.getService().scriptRefresh(channel.URI.spec, windowId, browser);
 }

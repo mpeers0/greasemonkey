@@ -7,6 +7,8 @@ Cu.import("resource://gre/modules/Services.jsm");
 
 Cu.import("chrome://greasemonkey-modules/content/third-party/getChromeWinForContentWin.js");
 Cu.import('chrome://greasemonkey-modules/content/prefmanager.js');
+// PaleMoon
+Cu.import("chrome://greasemonkey-modules/content/third-party/extended.js");
 Cu.import("chrome://greasemonkey-modules/content/util.js");
 
 
@@ -66,8 +68,14 @@ GM_ScriptStorageFront.prototype.getValue = function(name, defVal) {
 
   try {
     value = JSON.parse(value);
-    return Components.utils.cloneInto(
-        value, this._sandbox, { wrapReflectors: true });
+    // Firefox < 30 (i.e. PaleMoon)
+    if (Components.utils.cloneInto) {
+      value = Components.utils.cloneInto(
+          value, this._sandbox, {wrapReflectors: true});
+    } else {
+      value = _cloneInto(value);
+    }
+    return value;
   } catch (e) {
     dump('JSON parse error? ' + uneval(e) + '\n');
     return defVal;
