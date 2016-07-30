@@ -128,7 +128,7 @@ function updateData(data) {
   Object.freeze(newScripts);
   scripts = newScripts;
   Object.defineProperty(IPCScript.prototype, "globalExcludes", {
-    get: function () {
+    get: function IPCScript_getGlobalExcludes() {
       return data.globalExcludes;
     },
     configurable: true,

@@ -138,7 +138,7 @@ service.prototype.observe = function(aSubject, aTopic, aData) {
 
 service.prototype._config = null;
 Object.defineProperty(service.prototype, "config", {
-  get: function () {
+  get: function service_getConfig() {
     if (!this._config) {
       // First guarantee instantiation and existence.  (So that anything,
       // including stuff inside i.e. config._load(), can call

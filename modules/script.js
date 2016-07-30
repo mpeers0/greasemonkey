@@ -83,7 +83,7 @@ Script.prototype = Object.create(AbstractScript.prototype, {
 });
 
 Object.defineProperty(Script.prototype, "globalExcludes", {
-  get: function () {
+  get: function Script_getGlobalExcludes() {
     return GM_util.getService().config._globalExcludes;
   },
   enumerable: true

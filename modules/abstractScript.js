@@ -14,7 +14,7 @@ Cu.import('chrome://greasemonkey-modules/content/util.js');
 function AbstractScript() { }
 
 Object.defineProperty(AbstractScript.prototype, "globalExcludes", {
-  get: function () {
+  get: function AbstractScript_getGlobalExcludes() {
     return [];
   },
   configurable: true

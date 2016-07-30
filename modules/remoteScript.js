@@ -257,7 +257,7 @@ function RemoteScript(aUrl) {
 }
 
 Object.defineProperty(RemoteScript.prototype, "url", {
-  get: function () {
+  get: function RemoteScript_getUrl() {
     return new String(this._url);
   },
   enumerable: true
