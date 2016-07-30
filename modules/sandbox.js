@@ -61,7 +61,9 @@ function createSandbox(aScript, aContentWin, aUrl, aFrameScope) {
   // unsafeWindow getter to live in the sandbox.  See http://bugzil.la/1043958
   var unsafeWindowGetter = new sandbox.Function(
       'return window.wrappedJSObject || window;');
-  Object.defineProperty(sandbox, 'unsafeWindow', {get: unsafeWindowGetter});
+  Object.defineProperty(sandbox, "unsafeWindow", {
+    get: unsafeWindowGetter
+  });
 
 
   if (GM_util.inArray(aScript.grants, 'GM_addStyle')) {
@@ -166,7 +168,7 @@ function injectGMInfo(aScript, sandbox, aContentWin) {
   });
 
   // meta depends on content, so we need a lazy one here too
-  Object.defineProperty(waivedInfo, 'scriptMetaStr', {
+  Object.defineProperty(waivedInfo, "scriptMetaStr", {
     get: Cu.exportFunction(getMeta, sandbox)
   });
 }

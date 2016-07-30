@@ -137,16 +137,19 @@ service.prototype.observe = function(aSubject, aTopic, aData) {
 ///////////////////////////// Greasemonkey Service /////////////////////////////
 
 service.prototype._config = null;
-service.prototype.__defineGetter__('config', function() {
-  if (!this._config) {
-    // First guarantee instantiation and existence.  (So that anything,
-    // including stuff inside i.e. config._load(), can call
-    // i.e. config._changed().)
-    this._config = new Config();
-    // Then initialize.
-    this._config.initialize();
-  }
-  return this._config;
+Object.defineProperty(service.prototype, "config", {
+  get: function () {
+    if (!this._config) {
+      // First guarantee instantiation and existence.  (So that anything,
+      // including stuff inside i.e. config._load(), can call
+      // i.e. config._changed().)
+      this._config = new Config();
+      // Then initialize.
+      this._config.initialize();
+    }
+    return this._config;
+  },
+  enumerable: true
 });
 
 service.prototype.scriptUpdateData = function() {

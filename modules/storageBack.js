@@ -24,37 +24,41 @@ function GM_ScriptStorageBack(script) {
 }
 
 
-GM_ScriptStorageBack.prototype.__defineGetter__('dbFile',
-function GM_ScriptStorageBack_getDbFile() {
-  var file = GM_util.scriptDir();
-  file.append(this._script.baseDirName + '.db');
-  return file;
+Object.defineProperty(GM_ScriptStorageBack.prototype, "dbFile", {
+  get: function GM_ScriptStorageBack_getDbFile() {
+    var file = GM_util.scriptDir();
+    file.append(this._script.baseDirName + '.db');
+    return file;
+  },
+  enumerable: true
 });
 
 
-GM_ScriptStorageBack.prototype.__defineGetter__('db',
-function GM_ScriptStorageBack_getDb() {
-  if (null == this._db) {
-    this._db = Services.storage.openDatabase(this.dbFile);
+Object.defineProperty(GM_ScriptStorageBack.prototype, "db", {
+  get: function GM_ScriptStorageBack_getDb() {
+    if (null == this._db) {
+      this._db = Services.storage.openDatabase(this.dbFile);
 
-    // The auto_vacuum pragma has to be set before the table is created.
-    this._db.executeSimpleSQL('PRAGMA auto_vacuum = INCREMENTAL;');
-    this._db.executeSimpleSQL('PRAGMA incremental_vacuum(10);');
-    this._db.executeSimpleSQL('PRAGMA journal_mode = WAL;');
-    this._db.executeSimpleSQL('PRAGMA wal_autocheckpoint = 10;');
+      // The auto_vacuum pragma has to be set before the table is created.
+      this._db.executeSimpleSQL('PRAGMA auto_vacuum = INCREMENTAL;');
+      this._db.executeSimpleSQL('PRAGMA incremental_vacuum(10);');
+      this._db.executeSimpleSQL('PRAGMA journal_mode = WAL;');
+      this._db.executeSimpleSQL('PRAGMA wal_autocheckpoint = 10;');
 
-    this._db.executeSimpleSQL(
-        'CREATE TABLE IF NOT EXISTS scriptvals ('
-        + 'name TEXT PRIMARY KEY NOT NULL, '
-        + 'value TEXT '
-        + ')'
-        );
+      this._db.executeSimpleSQL(
+          'CREATE TABLE IF NOT EXISTS scriptvals ('
+          + 'name TEXT PRIMARY KEY NOT NULL, '
+          + 'value TEXT '
+          + ')'
+          );
 
-    // Run vacuum once manually to switch to the correct auto_vacuum mode for
-    // databases that were created with incorrect auto_vacuum. See #1879.
-    this._db.executeSimpleSQL('VACUUM;');
-  }
-  return this._db;
+      // Run vacuum once manually to switch to the correct auto_vacuum mode for
+      // databases that were created with incorrect auto_vacuum. See #1879.
+      this._db.executeSimpleSQL('VACUUM;');
+    }
+    return this._db;
+  },
+  enumerable: true
 });
 
 

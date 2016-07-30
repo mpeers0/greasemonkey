@@ -26,15 +26,19 @@ function GM_ScriptStorageFront(aScript, aMessageManager, aSandbox) {
 }
 
 
-GM_ScriptStorageFront.prototype.__defineGetter__('dbFile',
-function GM_ScriptStorageFront_getDbFile() {
-  throw 'Script storage front end has no DB file.';
+Object.defineProperty(GM_ScriptStorageFront.prototype, "dbFile", {
+  get: function GM_ScriptStorageFront_getDbFile() {
+    throw 'Script storage front end has no DB file.'
+  },
+  enumerable: true
 });
 
 
-GM_ScriptStorageFront.prototype.__defineGetter__('db',
-function GM_ScriptStorageFront_getDb() {
-  throw 'Script storage front end has no DB connection.';
+Object.defineProperty(GM_ScriptStorageFront.prototype, "db", {
+  get: function GM_ScriptStorageFront_getDb() {
+    throw 'Script storage front end has no DB connection.';
+  },
+  enumerable: true
 });
 
 

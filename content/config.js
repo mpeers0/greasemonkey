@@ -215,19 +215,24 @@ Config.prototype.move = function(script, destination) {
   this._changed(script, "move", to);
 },
 
-Config.prototype.__defineGetter__('globalExcludes',
-function Config_getGlobalExcludes() { return this._globalExcludes.concat(); }
-);
-
-Config.prototype.__defineSetter__('globalExcludes',
-function Config_setGlobalExcludes(val) {
-  this._globalExcludes = val.concat();
-  GM_prefRoot.setValue("globalExcludes", JSON.stringify(this._globalExcludes));
+Object.defineProperty(Config.prototype, "globalExcludes", {
+  get: function Config_getGlobalExcludes() {
+    return this._globalExcludes.concat();
+  },
+  set: function Config_setGlobalExcludes(val) {
+    this._globalExcludes = val.concat();
+    GM_prefRoot.setValue("globalExcludes", JSON.stringify(this._globalExcludes));
+  },
+  configurable: true,
+  enumerable: true
 });
 
-Config.prototype.__defineGetter__('scripts',
-function Config_getScripts() { return this._scripts.concat(); }
-);
+Object.defineProperty(Config.prototype, "scripts", {
+  get: function Config_getScripts() {
+    return this._scripts.concat();
+  },
+  enumerable: true
+});
 
 Config.prototype.getMatchingScripts = function(testFunc) {
   return this._scripts.filter(testFunc);

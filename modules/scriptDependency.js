@@ -35,36 +35,50 @@ ScriptDependency.prototype = {
   },
 };
 
-ScriptDependency.prototype.__defineGetter__('downloadURL',
-function ScriptDependency_getDownloadURL() {
-  return '' + (this._downloadURL || '');
+Object.defineProperty(ScriptDependency.prototype, "downloadURL", {
+  get: function ScriptDependency_getDownloadURL() {
+    return '' + (this._downloadURL || '');
+  },
+  enumerable: true
 });
 
-ScriptDependency.prototype.__defineGetter__('file',
-function ScriptDependency_getFile() {
-  var file = this._script.baseDirFile;
-  file.append(this._filename);
-  return file;
+Object.defineProperty(ScriptDependency.prototype, "file", {
+  get: function ScriptDependency_getFile() {
+    var file = this._script.baseDirFile;
+    file.append(this._filename);
+    return file;
+  },
+  enumerable: true
 });
 
-ScriptDependency.prototype.__defineGetter__('filename',
-function ScriptDependency_getFilename() {
-  return '' + (this._filename || this._dataURI || '');
+Object.defineProperty(ScriptDependency.prototype, "filename", {
+  get: function ScriptDependency_getFilename() {
+    return '' + (this._filename || this._dataURI || '');
+  },
+  enumerable: true
 });
 
-ScriptDependency.prototype.__defineGetter__('mimetype',
-function ScriptDependency_getMimetype() {
-  var mimetype = this._mimetype;
-  if (this._charset && this._charset.length > 0) {
-    mimetype += ';charset=' + this._charset;
-  }
-  return mimetype;
+Object.defineProperty(ScriptDependency.prototype, "mimetype", {
+  get: function ScriptDependency_getMimetype() {
+    var mimetype = this._mimetype;
+    if (this._charset && this._charset.length > 0) {
+      mimetype += ';charset=' + this._charset;
+    }
+    return mimetype;
+  },
+  enumerable: true
 });
 
-ScriptDependency.prototype.__defineGetter__('name',
-function ScriptDependency_getName() { return '' + this._name; });
+Object.defineProperty(ScriptDependency.prototype, "name", {
+  get: function ScriptDependency_getName() {
+    return '' + this._name;
+  },
+  enumerable: true
+});
 
-ScriptDependency.prototype.__defineGetter__('textContent',
-function ScriptDependency_getTextContent() {
-  return GM_util.getContents(this.file);
+Object.defineProperty(ScriptDependency.prototype, "textContent", {
+  get: function ScriptDependency_getTextContent() {
+    return GM_util.getContents(this.file);
+  },
+  enumerable: true
 });

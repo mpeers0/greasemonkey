@@ -10,10 +10,12 @@ function ScriptResource(aScript) {
   this.type = 'ScriptResource';
 }
 
-ScriptResource.prototype.__defineGetter__('dataContent',
-function ScriptResource_getDataContent() {
-  var binaryContents = GM_util.getBinaryContents(this.file);
+Object.defineProperty(ScriptResource.prototype, "dataContent", {
+  get: function ScriptResource_getDataContent() {
+    var binaryContents = GM_util.getBinaryContents(this.file);
 
-  return 'data:' + this.mimetype
-      + ';base64,' + encodeURIComponent(btoa(binaryContents));
+    return 'data:' + this.mimetype
+        + ';base64,' + encodeURIComponent(btoa(binaryContents));
+  },
+  enumerable: true
 });

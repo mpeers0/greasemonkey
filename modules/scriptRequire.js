@@ -10,7 +10,9 @@ function ScriptRequire(aScript) {
   this.type = "ScriptRequire";
 }
 
-ScriptRequire.prototype.__defineGetter__('fileURL',
-function ScriptRequire_getFileURL() {
-  return GM_util.getUriFromFile(this.file).spec;
+Object.defineProperty(ScriptRequire.prototype, "fileURL", {
+  get: function ScriptRequire_getFileURL() {
+    return GM_util.getUriFromFile(this.file).spec;
+  },
+  enumerable: true
 });

@@ -83,7 +83,10 @@ Script.prototype = Object.create(AbstractScript.prototype, {
 });
 
 Object.defineProperty(Script.prototype, "globalExcludes", {
-  get: function(){ return GM_util.getService().config._globalExcludes; }
+  get: function () {
+    return GM_util.getService().config._globalExcludes;
+  },
+  enumerable: true
 });
 
 Script.prototype._changed = function(event, data) {
@@ -94,225 +97,368 @@ Script.prototype._changed = function(event, data) {
 Script.prototype.changed = Script.prototype._changed;
 
 
-Script.prototype.__defineGetter__('author',
-function Script_getAuthor() { return this._author; });
-Script.prototype.__defineSetter__('author',
-function Script_setAuthor(aVal) { this._author = aVal ? '' + aVal : ''; });
+Object.defineProperty(Script.prototype, "author", {
+  get: function Script_getAuthor() {
+    return this._author;
+  },
+  set: function Script_setAuthor(aVal) {
+    this._author = aVal ? '' + aVal : '';
+  },
+  configurable: true,
+  enumerable: true
+});
 
-Script.prototype.__defineGetter__('installDate',
-function Script_getInstallDate() { return new Date(this._installTime); });
+Object.defineProperty(Script.prototype, "installDate", {
+  get: function Script_getInstallDate() {
+    return new Date(this._installTime);
+  },
+  enumerable: true
+});
 
-Script.prototype.__defineGetter__('modifiedDate',
-function Script_getModifiedDate() { return new Date(this._modifiedTime); });
+Object.defineProperty(Script.prototype, "modifiedDate", {
+  get: function Script_getModifiedDate() {
+    return new Date(this._modifiedTime);
+  },
+  enumerable: true
+});
 
-Script.prototype.__defineGetter__('name',
-function Script_getName() { return this._name; });
+Object.defineProperty(Script.prototype, "name", {
+  get: function Script_getName() {
+    return this._name;
+  },
+  enumerable: true
+});
 
-Script.prototype.__defineGetter__('namespace',
-function Script_getNamespace() { return this._namespace; });
+Object.defineProperty(Script.prototype, "namespace", {
+  get: function Script_getNamespace() {
+    return this._namespace;
+  },
+  enumerable: true
+});
 
-Script.prototype.__defineGetter__('id',
-function Script_getId() {
-  if (!this._id) this._id = this._namespace + "/" + this._name;
-  return this._id;
+Object.defineProperty(Script.prototype, "id", {
+  get: function Script_getId() {
+    if (!this._id) this._id = this._namespace + "/" + this._name;
+    return this._id;
+  },
+  enumerable: true
 });
 
 // TODO: Remove this with pref -> db migration code.
-Script.prototype.__defineGetter__('prefroot',
-function Script_getPrefroot() {
-  if (!this._prefroot) this._prefroot = ["scriptvals.", this.id, "."].join("");
-  return this._prefroot;
-});
-
-Script.prototype.__defineGetter__('dependencies',
-function Script_getDependencies() {
-  var deps = this.requires.concat(this.resources);
-  if (this.icon.downloadURL) deps.push(this.icon);
-  return deps;
-});
-
-Script.prototype.__defineGetter__('description',
-function Script_getDescription() { return this._description; });
-
-Script.prototype.__defineGetter__('localized',
-function Script_getLocalizedDescription() {
-  // We can't simply return this._locales[locale], as the best match for name
-  // and description might be for different locales (e.g. if an exact match is
-  // only provided for one of them).
-  function getBestLocalization(aLocales, aProp) {
-    var available = Object.keys(aLocales).filter(function(locale) {
-      return !!aLocales[locale][aProp];
-    });
-
-    var bestMatch = GM_util.getBestLocaleMatch(
-        GM_util.getPreferredLocale(), available);
-    if (!bestMatch) return null;
-
-    return aLocales[bestMatch][aProp];
-  }
-
-  if (!this._localized) {
-    this._localized = {
-      description: getBestLocalization(this._locales, "description")
-          || this._description,
-      name: getBestLocalization(this._locales, "name") || this._name
-    };
-  }
-
-  return this._localized;
-});
-
-Script.prototype.__defineGetter__('downloadURL',
-function Script_getDownloadUrl() { return this._downloadURL; });
-Script.prototype.__defineSetter__('downloadURL',
-function Script_setDownloadUrl(aVal) { this._downloadURL = aVal ? '' + aVal : ''; });
-
-Script.prototype.__defineGetter__('homepageURL',
-function Script_getHomepageUrl() { return this._homepageURL; });
-Script.prototype.__defineSetter__('homepageURL',
-function Script_setHomepageUrl(aVal) { this._homepageURL = aVal ? '' + aVal : ''; });
-
-Script.prototype.__defineGetter__('uuid',
-function Script_getUuid() { return this._uuid; });
-
-Script.prototype.__defineGetter__('version',
-function Script_getVersion() { return this._version; });
-
-Script.prototype.__defineGetter__('icon',
-function Script_getIcon() { return this._icon; });
-
-Script.prototype.__defineGetter__('noframes',
-function Script_getNoframes() { return this._noframes; });
-
-Script.prototype.__defineGetter__('enabled',
-function Script_getEnabled() { return this._enabled; });
-
-Script.prototype.__defineSetter__('enabled',
-function Script_setEnabled(enabled) {
-  this._enabled = enabled;
-  this._changed("edit-enabled", enabled);
-});
-
-Script.prototype.__defineGetter__('excludes',
-function Script_getExcludes() { return this._excludes.concat(); });
-Script.prototype.__defineSetter__('excludes',
-function Script_setExcludes(excludes) { this._excludes = excludes.concat(); });
-
-Script.prototype.__defineGetter__('grants',
-function Script_getGrants() { return this._grants.concat(); });
-Script.prototype.__defineSetter__('grants',
-function Script_setGrants(grants) { this._grants = grants.concat(); });
-
-Script.prototype.__defineGetter__('includes',
-function Script_getIncludes() { return this._includes.concat(); });
-Script.prototype.__defineSetter__('includes',
-function Script_setIncludes(includes) { this._includes = includes.concat(); });
-
-Script.prototype.__defineGetter__('userIncludes',
-function Script_getUserIncludes() { return this._userIncludes.concat(); });
-Script.prototype.__defineSetter__('userIncludes',
-function Script_setUserIncludes(includes) { this._userIncludes = includes.concat(); });
-
-Script.prototype.__defineGetter__('userMatches',
-function Script_getUserMatches() { return this._userMatches.concat(); });
-Script.prototype.__defineSetter__('userMatches',
-function Script_setUserMatches(matches) {
-  var matches_MatchPattern = [];
-
-  for (var i = 0, count = matches.length; i < count; i++) {
-    var match = matches[i];
-    try {
-      var match_MatchPattern = new MatchPattern(match);
-      matches_MatchPattern.push(match_MatchPattern);
-    } catch (e) {
-      GM_util.logError(stringBundle.GetStringFromName('parse.ignoring-match')
-          .replace('%1', match).replace('%2', e));
+Object.defineProperty(Script.prototype, "prefroot", {
+  get: function Script_getPrefroot() {
+    if (!this._prefroot) {
+      this._prefroot = ["scriptvals.", this.id, "."].join("");
     }
-  }
-  matches = matches_MatchPattern;
-
-  this._userMatches = matches.concat();
+    return this._prefroot;
+  },
+  enumerable: true
 });
 
-Script.prototype.__defineGetter__('userExcludes',
-function Script_getUserExcludes() { return this._userExcludes.concat(); });
-Script.prototype.__defineSetter__('userExcludes',
-function Script_setUserExcludes(excludes) { this._userExcludes = excludes.concat(); });
+Object.defineProperty(Script.prototype, "dependencies", {
+  get: function Script_getDependencies() {
+    var deps = this.requires.concat(this.resources);
+    if (this.icon.downloadURL) deps.push(this.icon);
+    return deps;
+  },
+  enumerable: true
+});
 
-Script.prototype.__defineGetter__('matches',
-function Script_getMatches() { return this._matches.concat(); });
-Script.prototype.__defineSetter__('matches',
-function Script_setMatches(matches) {
-  var matches_MatchPattern = [];
+Object.defineProperty(Script.prototype, "description", {
+  get: function Script_getDescription() {
+    return this._description;
+  },
+  enumerable: true
+});
 
-  for (var i = 0, count = matches.length; i < count; i++) {
-    var match = matches[i];
-    try {
-      var match_MatchPattern = new MatchPattern(match);
-      matches_MatchPattern.push(match_MatchPattern);
-    } catch (e) {
-      GM_util.logError(stringBundle.GetStringFromName('parse.ignoring-match')
-          .replace('%1', match).replace('%2', e));
+Object.defineProperty(Script.prototype, "localized", {
+  get: function Script_getLocalizedDescription() {
+    // We can't simply return this._locales[locale], as the best match for name
+    // and description might be for different locales (e.g. if an exact match is
+    // only provided for one of them).
+    function getBestLocalization(aLocales, aProp) {
+      var available = Object.keys(aLocales).filter(function(locale) {
+        return !!aLocales[locale][aProp];
+      });
+
+      var bestMatch = GM_util.getBestLocaleMatch(
+          GM_util.getPreferredLocale(), available);
+      if (!bestMatch) return null;
+
+      return aLocales[bestMatch][aProp];
     }
-  }
-  matches = matches_MatchPattern;
 
-  this._matches = matches.concat();
+    if (!this._localized) {
+      this._localized = {
+        description: getBestLocalization(this._locales, "description")
+            || this._description,
+        name: getBestLocalization(this._locales, "name") || this._name
+      };
+    }
+
+    return this._localized;
+  },
+  enumerable: true
 });
 
-Script.prototype.__defineGetter__('requires',
-function Script_getRequires() { return this._requires.concat(); });
-
-Script.prototype.__defineGetter__('resources',
-function Script_getResources() { return this._resources.concat(); });
-
-Script.prototype.__defineGetter__('runAt',
-function Script_getRunAt() { return this._runAt; });
-
-Script.prototype.__defineGetter__('filename',
-function Script_getFilename() { return this._filename; });
-
-Script.prototype.__defineGetter__('file',
-function Script_getFile() {
-  var file = this.baseDirFile;
-  file.append(this._filename);
-  return file;
+Object.defineProperty(Script.prototype, "downloadURL", {
+  get: function Script_getDownloadUrl() {
+    return this._downloadURL;
+  },
+  set: function Script_setDownloadUrl(aVal) {
+    this._downloadURL = aVal ? '' + aVal : '';
+  },
+  configurable: true,
+  enumerable: true
 });
 
-Script.prototype.__defineGetter__('updateURL',
-function Script_getUpdateURL() { return this._updateURL || this.downloadURL; });
-Script.prototype.__defineSetter__('updateURL',
-function Script_setUpdateURL(url) { this._updateURL = '' + url; });
-
-Script.prototype.__defineGetter__('updateIsSecure',
-function Script_getUpdateIsSecure() {
-  if (!this.downloadURL) return null;
-  return /^https/.test(this.downloadURL);
+Object.defineProperty(Script.prototype, "homepageURL", {
+  get: function Script_getHomepageUrl() {
+    return this._homepageURL;
+  },
+  set: function Script_setHomepageUrl(aVal) {
+    this._homepageURL = aVal ? '' + aVal : '';
+  },
+  configurable: true,
+  enumerable: true
 });
 
-Script.prototype.__defineGetter__('baseDirName',
-function Script_getBaseDirName() {
-  return '' + this._basedir;
+Object.defineProperty(Script.prototype, "uuid", {
+  get: function Script_getUuid() {
+    return this._uuid;
+  },
+  enumerable: true
 });
 
-Script.prototype.__defineGetter__('baseDirFile',
-function Script_getBaseDirFile() {
-  var file = GM_util.scriptDir();
-  file.append(this._basedir);
-  try {
-    // Can fail if this path does not exist.
-    file.normalize();
-  } catch (e) {
-    // no-op
-  }
-  return file;
+Object.defineProperty(Script.prototype, "version", {
+  get: function Script_getVersion() {
+    return this._version;
+  },
+  enumerable: true
 });
 
-Script.prototype.__defineGetter__('fileURL',
-function Script_getFileURL() { return GM_util.getUriFromFile(this.file).spec; });
+Object.defineProperty(Script.prototype, "icon", {
+  get: function Script_getIcon() {
+    return this._icon;
+  },
+  enumerable: true
+});
 
-Script.prototype.__defineGetter__('textContent',
-function Script_getTextContent() { return GM_util.getContents(this.file); });
+Object.defineProperty(Script.prototype, "noframes", {
+  get: function Script_getNoframes() {
+    return this._noframes;
+  },
+  enumerable: true
+});
+
+Object.defineProperty(Script.prototype, "enabled", {
+  get: function Script_getEnabled() {
+    return this._enabled;
+  },
+  set: function Script_setEnabled(enabled) {
+    this._enabled = enabled;
+    this._changed("edit-enabled", enabled);
+  },
+  configurable: true,
+  enumerable: true
+});
+
+Object.defineProperty(Script.prototype, "excludes", {
+  get: function Script_getExcludes() {
+    return this._excludes.concat();
+  },
+  set: function Script_setExcludes(excludes) {
+    this._excludes = excludes.concat();
+  },
+  configurable: true,
+  enumerable: true
+});
+
+Object.defineProperty(Script.prototype, "grants", {
+  get: function Script_getGrants() {
+    return this._grants.concat();
+  },
+  set: function Script_setGrants(grants) {
+    this._grants = grants.concat();
+  },
+  configurable: true,
+  enumerable: true
+});
+
+Object.defineProperty(Script.prototype, "includes", {
+  get: function Script_getIncludes() {
+    return this._includes.concat();
+  },
+  set: function Script_setIncludes(includes) {
+    this._includes = includes.concat();
+  },
+  configurable: true,
+  enumerable: true
+});
+
+Object.defineProperty(Script.prototype, "userIncludes", {
+  get: function Script_getUserIncludes() {
+    return this._userIncludes.concat();
+  },
+  set: function Script_setUserIncludes(includes) {
+    this._userIncludes = includes.concat();
+  },
+  configurable: true,
+  enumerable: true
+});
+
+Object.defineProperty(Script.prototype, "userMatches", {
+  get: function Script_getUserMatches() {
+    return this._userMatches.concat();
+  },
+  set: function Script_setUserMatches(matches) {
+    var matches_MatchPattern = [];
+
+    for (var i = 0, count = matches.length; i < count; i++) {
+      var match = matches[i];
+      try {
+        var match_MatchPattern = new MatchPattern(match);
+        matches_MatchPattern.push(match_MatchPattern);
+      } catch (e) {
+        GM_util.logError(stringBundle.GetStringFromName('parse.ignoring-match')
+            .replace('%1', match).replace('%2', e));
+      }
+    }
+    matches = matches_MatchPattern;
+
+    this._userMatches = matches.concat();
+  },
+  configurable: true,
+  enumerable: true
+});
+
+Object.defineProperty(Script.prototype, "userExcludes", {
+  get: function Script_getUserExcludes() {
+    return this._userExcludes.concat();
+  },
+  set: function Script_setUserExcludes(excludes) {
+    this._userExcludes = excludes.concat();
+  },
+  configurable: true,
+  enumerable: true
+});
+
+Object.defineProperty(Script.prototype, "matches", {
+  get: function Script_getMatches() {
+    return this._matches.concat();
+  },
+  set: function Script_setMatches(matches) {
+    var matches_MatchPattern = [];
+
+    for (var i = 0, count = matches.length; i < count; i++) {
+      var match = matches[i];
+      try {
+        var match_MatchPattern = new MatchPattern(match);
+        matches_MatchPattern.push(match_MatchPattern);
+      } catch (e) {
+        GM_util.logError(stringBundle.GetStringFromName('parse.ignoring-match')
+            .replace('%1', match).replace('%2', e));
+      }
+    }
+    matches = matches_MatchPattern;
+
+    this._matches = matches.concat();
+  },
+  configurable: true,
+  enumerable: true
+});
+
+Object.defineProperty(Script.prototype, "requires", {
+  get: function Script_getRequires() {
+    return this._requires.concat();
+  },
+  enumerable: true
+});
+
+Object.defineProperty(Script.prototype, "resources", {
+  get: function Script_getResources() {
+    return this._resources.concat();
+  },
+  enumerable: true
+});
+
+Object.defineProperty(Script.prototype, "runAt", {
+  get: function Script_getRunAt() {
+    return this._runAt;
+  },
+  enumerable: true
+});
+
+Object.defineProperty(Script.prototype, "filename", {
+  get: function Script_getFilename() {
+    return this._filename;
+  },
+  enumerable: true
+});
+
+Object.defineProperty(Script.prototype, "file", {
+  get: function Script_getFile() {
+    var file = this.baseDirFile;
+    file.append(this._filename);
+    return file;
+  },
+  enumerable: true
+});
+
+Object.defineProperty(Script.prototype, "updateURL", {
+  get: function Script_getUpdateURL() {
+    return this._updateURL || this.downloadURL;
+  },
+  set: function Script_setUpdateURL(url) {
+    this._updateURL = '' + url;
+  },
+  configurable: true,
+  enumerable: true
+});
+
+Object.defineProperty(Script.prototype, "updateIsSecure", {
+  get: function Script_getUpdateIsSecure() {
+    if (!this.downloadURL) return null;
+    return /^https/.test(this.downloadURL);
+  },
+  enumerable: true
+});
+
+Object.defineProperty(Script.prototype, "baseDirName", {
+  get: function Script_getBaseDirName() {
+    return '' + this._basedir;
+  },
+  enumerable: true
+});
+
+Object.defineProperty(Script.prototype, "baseDirFile", {
+  get: function Script_getBaseDirFile() {
+    var file = GM_util.scriptDir();
+    file.append(this._basedir);
+    try {
+      // Can fail if this path does not exist.
+      file.normalize();
+    } catch (e) {
+      // no-op
+    }
+    return file;
+  },
+  enumerable: true
+});
+
+Object.defineProperty(Script.prototype, "fileURL", {
+  get: function Script_getFileURL() {
+    return GM_util.getUriFromFile(this.file).spec;
+  },
+  enumerable: true
+});
+
+Object.defineProperty(Script.prototype, "textContent", {
+  get: function Script_getTextContent() {
+    return GM_util.getContents(this.file);
+  },
+  enumerable: true
+});
 
 Script.prototype.setFilename = function(aBaseName, aFileName) {
   this._basedir = aBaseName;
@@ -548,11 +694,13 @@ Script.prototype.toString = function() {
 
 Script.prototype.setDownloadedFile = function(file) { this._tempFile = file; };
 
-Script.prototype.__defineGetter__('previewURL',
-function Script_getPreviewURL() {
-  return Components.classes["@mozilla.org/network/io-service;1"]
-      .getService(Components.interfaces.nsIIOService)
-      .newFileURI(this._tempFile).spec;
+Object.defineProperty(Script.prototype, "previewURL", {
+  get: function Script_getPreviewURL() {
+    return Components.classes["@mozilla.org/network/io-service;1"]
+        .getService(Components.interfaces.nsIIOService)
+        .newFileURI(this._tempFile).spec;
+  },
+  enumerable: true
 });
 
 Script.prototype.info = function() {

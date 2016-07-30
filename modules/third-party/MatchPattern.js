@@ -113,8 +113,12 @@ function MatchPattern(pattern) {
   this._pathExpr = GM_convert2RegExp(path, false, true);
 }
 
-MatchPattern.prototype.__defineGetter__('pattern',
-function MatchPattern_getPattern() { return '' + this._pattern; });
+Object.defineProperty(MatchPattern.prototype, "pattern", {
+  get: function MatchPattern_getPattern() {
+    return '' + this._pattern;
+  },
+  enumerable: true
+});
 
 MatchPattern.prototype.doMatch = function(uriSpec) {
   var matchURI = GM_util.uriFromUrl(uriSpec);

@@ -15,27 +15,29 @@ function ScriptIcon(aScript) {
   this.type = 'ScriptIcon';
 }
 
-ScriptIcon.prototype.__defineGetter__('fileURL',
-function ScriptIcon_getFileURL() {
-  if (this._dataURI) {
-    return this._dataURI;
-  } else if (this._filename) {
-    return GM_util.getUriFromFile(this.file).spec;
-  } else {
-    return 'chrome://greasemonkey/skin/userscript.png';
-  }
+Object.defineProperty(ScriptIcon.prototype, "fileURL", {
+  get: function ScriptIcon_getFileURL() {
+    if (this._dataURI) {
+      return this._dataURI;
+    } else if (this._filename) {
+      return GM_util.getUriFromFile(this.file).spec;
+    } else {
+      return 'chrome://greasemonkey/skin/userscript.png';
+    }
+  },
+  set: function ScriptIcon_setFileURL(iconURL) {
+    if (/^data:/i.test(iconURL)) {
+      // icon is a data scheme
+      this._dataURI = iconURL;
+    } else if (iconURL) {
+      // icon is a file
+      this._filename = iconURL;
+    }
+  },
+  configurable: true,
+  enumerable: true
 });
 
-ScriptIcon.prototype.__defineSetter__('fileURL',
-function ScriptIcon_setFileURL(iconURL) {
-  if (/^data:/i.test(iconURL)) {
-    // icon is a data scheme
-    this._dataURI = iconURL;
-  } else if (iconURL) {
-    // icon is a file
-    this._filename = iconURL;
-  }
-});
 
 ScriptIcon.prototype.setMetaVal = function(value) {
   // accept data uri schemes for image mime types

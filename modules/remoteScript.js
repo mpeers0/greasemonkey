@@ -256,8 +256,12 @@ function RemoteScript(aUrl) {
   this.script = null;
 }
 
-RemoteScript.prototype.__defineGetter__(
-    'url', function() { return new String(this._url); });
+Object.defineProperty(RemoteScript.prototype, "url", {
+  get: function () {
+    return new String(this._url);
+  },
+  enumerable: true
+});
 
 RemoteScript.prototype.cancel = function() {
   this._cancelled = true;

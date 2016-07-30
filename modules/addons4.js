@@ -130,64 +130,74 @@ ScriptAddon.prototype.description = null;
 // Private and custom attributes.
 ScriptAddon.prototype._script = null;
 
-ScriptAddon.prototype.__defineGetter__('applyBackgroundUpdates',
-function ScriptAddon_getApplyBackgroundUpdates() {
-  return this._script.checkRemoteUpdates;
+Object.defineProperty(ScriptAddon.prototype, "applyBackgroundUpdates", {
+  get: function ScriptAddon_getApplyBackgroundUpdates() {
+    return this._script.checkRemoteUpdates;
+  },
+  set: function ScriptAddon_setApplyBackgroundUpdates(aVal) {
+    this._script.checkRemoteUpdates = aVal;
+    this._script._changed('modified', null);
+    AddonManagerPrivate.callAddonListeners(
+        'onPropertyChanged', this, ['applyBackgroundUpdates']);
+  },
+  configurable: true,
+  enumerable: true
 });
 
-ScriptAddon.prototype.__defineSetter__('applyBackgroundUpdates',
-function ScriptAddon_SetApplyBackgroundUpdates(aVal) {
-  this._script.checkRemoteUpdates = aVal;
-  this._script._changed('modified', null);
-  AddonManagerPrivate.callAddonListeners(
-      'onPropertyChanged', this, ['applyBackgroundUpdates']);
-});
-
-ScriptAddon.prototype.__defineGetter__('executionIndex',
-function ScriptAddon_getExecutionIndex() {
-  return GM_util.getService().config._scripts.indexOf(this._script);
+Object.defineProperty(ScriptAddon.prototype, "executionIndex", {
+  get: function ScriptAddon_getExecutionIndex() {
+    return GM_util.getService().config._scripts.indexOf(this._script);
+  },
+  enumerable: true
 });
 
 // Getters/setters/functions for API attributes.
-ScriptAddon.prototype.__defineGetter__('isActive',
-function ScriptAddon_getIsActive() {
-  return this._script.enabled;
+Object.defineProperty(ScriptAddon.prototype, "isActive", {
+  get: function ScriptAddon_getIsActive() {
+    return this._script.enabled;
+  },
+  enumerable: true
 });
 
-ScriptAddon.prototype.__defineGetter__('optionsURL',
-function ScriptAddon_getOptionsURL() {
-  return 'chrome://greasemonkey/content/scriptprefs.xul#'
-      + encodeURIComponent(this._script.id);
+Object.defineProperty(ScriptAddon.prototype, "optionsURL", {
+  get: function ScriptAddon_getOptionsURL() {
+    return 'chrome://greasemonkey/content/scriptprefs.xul#'
+        + encodeURIComponent(this._script.id);
+  },
+  enumerable: true
 });
 
-ScriptAddon.prototype.__defineGetter__('userDisabled',
-function ScriptAddon_getUserDisabled() {
-  return !this._script.enabled;
+Object.defineProperty(ScriptAddon.prototype, "userDisabled", {
+  get: function ScriptAddon_getUserDisabled() {
+    return !this._script.enabled;
+  },
+  set: function ScriptAddon_setUserDisabled(val) {
+    if (val == this.userDisabled) {
+      return val;
+    }
+
+    AddonManagerPrivate.callAddonListeners(
+        val ? 'onEnabling' : 'onDisabling', this, false);
+    this._script.enabled = !val;
+    AddonManagerPrivate.callAddonListeners(
+        val ? 'onEnabled' : 'onDisabled', this);
+  },
+  configurable: true,
+  enumerable: true
 });
 
-ScriptAddon.prototype.__defineSetter__('userDisabled',
-function ScriptAddon_prototype_setter_userDisabled(val) {
-  if (val == this.userDisabled) {
-    return val;
-  }
-
-  AddonManagerPrivate.callAddonListeners(
-      val ? 'onEnabling' : 'onDisabling', this, false);
-  this._script.enabled = !val;
-  AddonManagerPrivate.callAddonListeners(
-      val ? 'onEnabled' : 'onDisabled', this);
-});
-
-ScriptAddon.prototype.__defineGetter__('permissions',
-function ScriptAddon_getPermissions() {
-  var perms = AddonManager.PERM_CAN_UNINSTALL;
-  perms |= this.userDisabled
-      ? AddonManager.PERM_CAN_ENABLE
-      : AddonManager.PERM_CAN_DISABLE;
-  if (this.forceUpdate || this._script.isRemoteUpdateAllowed()) {
-    perms |= AddonManager.PERM_CAN_UPGRADE;
-  }
-  return perms;
+Object.defineProperty(ScriptAddon.prototype, "permissions", {
+  get: function ScriptAddon_getPermissions() {
+    var perms = AddonManager.PERM_CAN_UNINSTALL;
+    perms |= this.userDisabled
+        ? AddonManager.PERM_CAN_ENABLE
+        : AddonManager.PERM_CAN_DISABLE;
+    if (this.forceUpdate || this._script.isRemoteUpdateAllowed()) {
+      perms |= AddonManager.PERM_CAN_UPGRADE;
+    }
+    return perms;
+  },
+  enumerable: true
 });
 
 ScriptAddon.prototype.isCompatibleWith = function() {
