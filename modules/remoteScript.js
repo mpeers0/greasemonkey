@@ -11,6 +11,7 @@ Cu.import('chrome://greasemonkey-modules/content/scriptIcon.js');
 Cu.import('chrome://greasemonkey-modules/content/util.js');
 
 Cu.import("resource://gre/modules/NetUtil.jsm");
+Cu.import("resource://gre/modules/PrivateBrowsingUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
@@ -598,6 +599,24 @@ RemoteScript.prototype._downloadFile = function(
     'contentPolicyType': Ci.nsIContentPolicy.TYPE_OBJECT_SUBREQUEST,
     'loadUsingSystemPrincipal': true,
   });
+  // See #1717
+  // Private browsing
+  // A page with a userscript - http auth
+  // After the first page load failure (httpChannel.responseStatus == 401):
+  // the second page load works
+  if (channel instanceof Ci.nsIPrivateBrowsingChannel) {
+    var isPrivate = true;
+    var chromeWin = GM_util.getBrowserWindow();
+    if (chromeWin.gBrowser) {
+      // i.e. the Private Browsing autoStart pref:
+      // "browser.privatebrowsing.autostart"
+      isPrivate = PrivateBrowsingUtils.isBrowserPrivate(chromeWin.gBrowser);
+    }
+    if (isPrivate) {
+      channel = channel.QueryInterface(Ci.nsIPrivateBrowsingChannel);
+      channel.setPrivate(true);
+    }
+  }
   this._channels.push(channel);
   var dsl = new DownloadListener(
       0 == this._progressIndex,  // aTryToParse
