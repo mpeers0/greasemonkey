@@ -146,7 +146,7 @@ function cspObserver(aSubject, aTopic, aData) {
   try {    
     cspRules = channel.getResponseHeader(cspHeader1);
     // dump("cspObserver - header (" + cspHeader1 + ") - before: " + cspRules + "\n");
-    cspRulesMy = _getCspAppendingMyHostDirective(cspRules);
+    cspRulesMy = _cspOverride(cspRules);
     channel.setResponseHeader(cspHeader1, cspRulesMy, false);
     cspRules = channel.getResponseHeader(cspHeader1);
     // dump("cspObserver - header (" + cspHeader1 + ") - after: " + cspRules + "\n");
@@ -154,7 +154,7 @@ function cspObserver(aSubject, aTopic, aData) {
     try {
       cspRules = channel.getResponseHeader(cspHeader2);
       // dump("cspObserver - header (" + cspHeader2 + ") - before: " + cspRules + "\n");
-      cspRulesMy = _getCspAppendingMyHostDirective(cspRules);
+      cspRulesMy = _cspOverride(cspRules);
       channel.setResponseHeader(cspHeader2, cspRulesMy, false);
       cspRules = channel.getResponseHeader(cspHeader2);
       // dump("cspObserver - header (" + cspHeader2 + ") - after: " + cspRules + "\n");
@@ -165,7 +165,7 @@ function cspObserver(aSubject, aTopic, aData) {
   }
 }
 
-function _getCspAppendingMyHostDirective(aCspRules) {
+function _cspOverride(aCspRules) {
   var rules = aCspRules.split(";");
 
   var rulesMyDefault = ["'unsafe-inline'", "'unsafe-eval'"];
