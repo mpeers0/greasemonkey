@@ -320,8 +320,8 @@ function _cspOverride(aCspRules) {
               + " " + rulesMyDefault[j];
         }
       }
+      // dump("cspObserver - rules - default (" + ruleDefault.value + ") - after: " + rules[ruleDefault.indexes[i]] + "\n");
     }
-    // dump("cspObserver - rules - default (" + ruleDefault.value + ") - after: " + rules[ruleDefault.indexes[i]] + "\n");
   }
 
   return rules.join(";");
