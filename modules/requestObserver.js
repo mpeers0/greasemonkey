@@ -115,6 +115,208 @@ function installObserver(aSubject, aTopic, aData) {
 
 // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ //
 
+function cspObserver(aSubject, aTopic, aData) {
+  if (!GM_util.getEnabled()) {
+    return;
+  }
+
+  var channel = aSubject.QueryInterface(Ci.nsIChannel);
+  if (!channel) {
+    return;
+  }
+
+  // dump("cspObserver - url: " + channel.URI.spec + "\n");
+  try {
+    var httpChannel = channel.QueryInterface(Ci.nsIHttpChannel);
+    // dump("cspObserver - httpChannel - responseStatus: " + httpChannel.responseStatus + "\n");
+    if (200 != httpChannel.responseStatus) {
+      return;
+    }
+  } catch (e) {
+    // dump("cspObserver - httpChannel - file:/// URIs? - e: " + e + "\n");
+    return;
+  }
+
+  var cspHeader1 = "Content-Security-Policy";
+  var cspHeader2 = "X-Content-Security-Policy";
+
+  var cspRules = null;
+  var cspRulesMy = null;
+
+  try {    
+    cspRules = channel.getResponseHeader(cspHeader1);
+    // dump("cspObserver - header (" + cspHeader1 + ") - before: " + cspRules + "\n");
+    cspRulesMy = _getCspAppendingMyHostDirective(cspRules);
+    channel.setResponseHeader(cspHeader1, cspRulesMy, false);
+    cspRules = channel.getResponseHeader(cspHeader1);
+    // dump("cspObserver - header (" + cspHeader1 + ") - after: " + cspRules + "\n");
+  } catch (e) {
+    try {
+      cspRules = channel.getResponseHeader(cspHeader2);
+      // dump("cspObserver - header (" + cspHeader2 + ") - before: " + cspRules + "\n");
+      cspRulesMy = _getCspAppendingMyHostDirective(cspRules);
+      channel.setResponseHeader(cspHeader2, cspRulesMy, false);
+      cspRules = channel.getResponseHeader(cspHeader2);
+      // dump("cspObserver - header (" + cspHeader2 + ") - after: " + cspRules + "\n");
+    } catch (e) {
+      // dump("cspObserver - no csp headers defined? - e: " + e + "\n");
+      return;
+    }
+  }
+}
+
+function _getCspAppendingMyHostDirective(aCspRules) {
+  var rules = aCspRules.split(";");
+
+  var rulesMyDefault = ["'unsafe-inline'", "'unsafe-eval'"];
+
+  // base-uri, child-src, connect-src, font-src, form-action,
+  // frame-ancestors, frame-src, img-src, manifest-src, media-src,
+  // object-src, plugin-types, referrer, reflected-xss, report-uri,
+  // sandbox, script-src, strict-dynamic, style-src, upgrade-insecure-requests
+  var rulesMy = [
+    /*
+    {
+      "name": "base-uri",
+      "value": rulesMyDefault,
+      "noDefaultOverride": false
+    },
+    {
+      "name": "child-src",
+      "value": rulesMyDefault,
+      "noDefaultOverride": false
+    },
+    {
+      "name": "connect-src",
+      "value": rulesMyDefault,
+      "noDefaultOverride": false
+    },
+    {
+      "name": "font-src",
+      "value": rulesMyDefault,
+      "noDefaultOverride": false
+    },
+    {
+      "name": "form-action",
+      "value": rulesMyDefault,
+      "noDefaultOverride": false
+    },
+    {
+      "name": "frame-ancestors",
+      "value": rulesMyDefault,
+      "noDefaultOverride": false
+    },
+    {
+      "name": "frame-src",
+      "value": rulesMyDefault,
+      "noDefaultOverride": false
+    },
+    {
+      "name": "img-src",
+      "value": rulesMyDefault,
+      "noDefaultOverride": false
+    },
+    {
+      "name": "manifest-src",
+      "value": rulesMyDefault,
+      "noDefaultOverride": false
+    },
+    {
+      "name": "media-src",
+      "value": rulesMyDefault,
+      "noDefaultOverride": false
+    },
+    {
+      "name": "object-src",
+      "value": rulesMyDefault,
+      "noDefaultOverride": false
+    },
+    {
+      "name": "refferer",
+      "value": "unsafe-url",
+      "noDefaultOverride": false
+    },
+    */
+    {
+      "name": "script-src",
+      "value": rulesMyDefault,
+      // "noDefaultOverride": true
+      "noDefaultOverride": false
+    },
+    /*
+    {
+      "name": "style-src",
+      "value": rulesMyDefault,
+      "noDefaultOverride": false
+    },
+    */
+  ];
+
+  var ruleDefault = {
+    "index": -1,
+    "override": true,
+    "value": "default-src"
+  };
+
+  // http://www.w3.org/TR/CSP2/#directive-script-src
+  // http://www.w3.org/TR/CSP2/#source-list-syntax
+  // http://bugzil.la/1004703, http://bugzil.la/1026520, etc.
+  // - Content Security Policy: Ignoring “'unsafe-inline'”
+  //   within script-src or style-src: nonce-source or hash-source specified
+  // e.g.: https://twitter.com
+  var rulesDisabled = new RegExp(
+      "\\s?'(none|(nonce|sha256|sha384|sha512)-[^']+)'", "gim");
+
+  for (var i = 0, i_count = rules.length; i < i_count; i++) {
+    if (rules[i].trim() != "") {
+      // dump("cspObserver - rules: " + rules[i].trim() + "\n");
+      for (var j = 0, j_count = rulesMy.length; j < j_count; j++) {
+        if (rules[i].toLowerCase().trim().indexOf(rulesMy[j].name) == 0) {
+          // dump("cspObserver - rules - my (" + rulesMy[j].name + ") - before: " + rules[i] + "\n");
+          if (rulesDisabled.test(rules[i])) {
+            // dump("cspObserver - rules - my (" + rulesMy[j].name + ") - disabled" + "\n");
+            rules[i] = rules[i].replace(rulesDisabled, "");
+          }
+          for (var k = 0, k_count = rulesMy[j].value.length; k < k_count; k++) {
+            if (rules[i].toLowerCase().indexOf(rulesMy[j].value[k]) == -1) {
+              rules[i] = rules[i] + " " + rulesMy[j].value[k];
+            }
+          }
+          // dump("cspObserver - rules - my (" + rulesMy[j].name + ") - after: " + rules[i] + "\n");
+          if (ruleDefault.override) {
+            ruleDefault.override = !rulesMy[j].noDefaultOverride;
+          }
+          // break;
+        }
+      }
+      if (rules[i].toLowerCase().trim().indexOf(ruleDefault.value) == 0) {
+        // dump("cspObserver - rules - default (" + rules[i].trim() + ") - index: " + i + "\n");
+        ruleDefault.index = i;
+      }
+    }
+  }
+  if (ruleDefault.override && (ruleDefault.index != -1)) {
+    // dump("cspObserver - rules - default (" + ruleDefault.value + ") - before: " + rules[ruleDefault.index] + "\n");
+    if (rulesDisabled.test(rules[ruleDefault.index])) {
+      // dump("cspObserver - rules - default (" + ruleDefault.value + ") - disabled" + "\n");
+      rules[ruleDefault.index] = rules[ruleDefault.index]
+          .replace(rulesDisabled, "");
+    }
+    for (var j = 0, j_count = rulesMyDefault.length; j < j_count; j++) {
+      if (rules[ruleDefault.index]
+          .toLowerCase().indexOf(rulesMyDefault[j]) == -1) {
+        rules[ruleDefault.index] = rules[ruleDefault.index]
+            + " " + rulesMyDefault[j];
+      }
+    }
+    // dump("cspObserver - rules - default (" + ruleDefault.value + ") - after: " + rules[ruleDefault.index] + "\n");
+  }
+
+  return rules.join(";");
+}
+
+// \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ //
+
 Services.obs.addObserver({
   observe: function(aSubject, aTopic, aData) {
     try {
@@ -129,3 +331,13 @@ Services.obs.addObserver({
     }
   }
 }, "http-on-modify-request", false);
+
+Services.obs.addObserver({
+  observe: function(aSubject, aTopic, aData) {
+    try {
+      cspObserver(aSubject, aTopic, aData);
+    } catch (e) {
+      dump("Greasemonkey install observer failed:\n" + e + "\n");
+    }
+  }
+}, "http-on-examine-response", false);
