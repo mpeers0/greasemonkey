@@ -260,7 +260,7 @@ function _cspOverride(aCspRules) {
   ];
 
   var ruleDefault = {
-    "index": -1,
+    "indexes": [],
     "override": true,
     "value": "default-src"
   };
@@ -274,6 +274,9 @@ function _cspOverride(aCspRules) {
   var rulesDisabled = new RegExp(
       "\\s?'(none|(nonce|sha256|sha384|sha512)-[^']+)'", "gim");
 
+  // - Content Security Policy: Duplicate ... directives detected.
+  //   All but the first instance will be ignored.
+  // But... All directives. We will not count on it...
   for (var i = 0, i_count = rules.length; i < i_count; i++) {
     if (rules[i].trim() != "") {
       // dump("cspObserver - rules: " + rules[i].trim() + "\n");
@@ -293,30 +296,32 @@ function _cspOverride(aCspRules) {
           if (ruleDefault.override) {
             ruleDefault.override = !rulesMy[j].noDefaultOverride;
           }
-          // break;
+          break;
         }
       }
       if (rules[i].toLowerCase().trim().indexOf(ruleDefault.value) == 0) {
         // dump("cspObserver - rules - default (" + rules[i].trim() + ") - index: " + i + "\n");
-        ruleDefault.index = i;
+        ruleDefault.indexes.push(i);
       }
     }
   }
-  if (ruleDefault.override && (ruleDefault.index != -1)) {
-    // dump("cspObserver - rules - default (" + ruleDefault.value + ") - before: " + rules[ruleDefault.index] + "\n");
-    if (rulesDisabled.test(rules[ruleDefault.index])) {
-      // dump("cspObserver - rules - default (" + ruleDefault.value + ") - disabled" + "\n");
-      rules[ruleDefault.index] = rules[ruleDefault.index]
-          .replace(rulesDisabled, "");
-    }
-    for (var j = 0, j_count = rulesMyDefault.length; j < j_count; j++) {
-      if (rules[ruleDefault.index]
-          .toLowerCase().indexOf(rulesMyDefault[j]) == -1) {
-        rules[ruleDefault.index] = rules[ruleDefault.index]
-            + " " + rulesMyDefault[j];
+  if (ruleDefault.override) {
+    for (var i = 0, i_count = ruleDefault.indexes.length; i < i_count; i++) {
+      // dump("cspObserver - rules - default (" + ruleDefault.value + ") - before: " + rules[ruleDefault.indexes[i]] + "\n");
+      if (rulesDisabled.test(rules[ruleDefault.indexes[i]])) {
+        // dump("cspObserver - rules - default (" + ruleDefault.value + ") - disabled" + "\n");
+        rules[ruleDefault.indexes[i]] = rules[ruleDefault.indexes[i]]
+            .replace(rulesDisabled, "");
+      }
+      for (var j = 0, j_count = rulesMyDefault.length; j < j_count; j++) {
+        if (rules[ruleDefault.indexes[i]]
+            .toLowerCase().indexOf(rulesMyDefault[j]) == -1) {
+          rules[ruleDefault.indexes[i]] = rules[ruleDefault.indexes[i]]
+              + " " + rulesMyDefault[j];
+        }
       }
     }
-    // dump("cspObserver - rules - default (" + ruleDefault.value + ") - after: " + rules[ruleDefault.index] + "\n");
+    // dump("cspObserver - rules - default (" + ruleDefault.value + ") - after: " + rules[ruleDefault.indexes[i]] + "\n");
   }
 
   return rules.join(";");
