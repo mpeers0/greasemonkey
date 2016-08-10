@@ -17,6 +17,13 @@ var gDisallowedSchemes = {
 var gScriptEndingRegexp = new RegExp('\\.user\\.js$');
 var gContentTypes = Ci.nsIContentPolicy;
 
+var gCspObservers = [
+  "http-on-examine-response",
+  "http-on-examine-cached-response",
+  // "http-on-examine-merged-response"
+];
+
+
 // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ // \\ //
 
 function checkScriptRefresh(channel) {
@@ -125,7 +132,7 @@ function cspObserver(aSubject, aTopic, aData) {
     return;
   }
 
-  // dump("cspObserver - url: " + channel.URI.spec + "\n");
+  // dump("cspObserver - observer (" + aTopic + ") - url: " + channel.URI.spec + "\n");
   try {
     var httpChannel = channel.QueryInterface(Ci.nsIHttpChannel);
     // dump("cspObserver - httpChannel - responseStatus: " + httpChannel.responseStatus + "\n");
@@ -332,12 +339,14 @@ Services.obs.addObserver({
   }
 }, "http-on-modify-request", false);
 
-Services.obs.addObserver({
-  observe: function(aSubject, aTopic, aData) {
-    try {
-      cspObserver(aSubject, aTopic, aData);
-    } catch (e) {
-      dump("Greasemonkey install observer failed:\n" + e + "\n");
+for (var observer in gCspObservers) {
+  Services.obs.addObserver({
+    observe: function(aSubject, aTopic, aData) {
+      try {
+        cspObserver(aSubject, aTopic, aData);
+      } catch (e) {
+        dump("Greasemonkey install observer failed:\n" + e + "\n");
+      }
     }
-  }
-}, "http-on-examine-response", false);
+  }, gCspObservers[observer], false);
+}
