@@ -18,9 +18,18 @@ var gScriptEndingRegexp = new RegExp('\\.user\\.js$');
 var gContentTypes = Ci.nsIContentPolicy;
 
 var gCspObservers = [
-  "http-on-examine-response",
-  "http-on-examine-cached-response",
-  // "http-on-examine-merged-response"
+  {
+    "value": "http-on-examine-response",
+    "allowed": true
+  },
+  {
+    "value": "http-on-examine-cached-response",
+    "allowed": true
+  },
+  {
+    "value": "http-on-examine-merged-response",
+    "allowed": true
+  },
 ];
 
 
@@ -127,12 +136,32 @@ function cspObserver(aSubject, aTopic, aData) {
     return;
   }
 
+  var _observer = {
+    "allowed": false,
+    "unknown": true
+  };
+  for (var observer in gCspObservers) {
+    if (gCspObservers[observer].value == aTopic) {
+      _observer.allowed = gCspObservers[observer].allowed;
+      _observer.unknown = false;
+      break;
+    }
+  }
+  if (!_observer.allowed) {
+    dump("cspObserver - forbidden topic: " + aTopic + "\n");
+    return;
+  }
+  if (_observer.unknown) {
+    dump("cspObserver - unknown topic: " + aTopic + "\n");
+    return;
+  }
+
   var channel = aSubject.QueryInterface(Ci.nsIChannel);
   if (!channel) {
     return;
   }
 
-  // dump("cspObserver - observer (" + aTopic + ") - url: " + channel.URI.spec + "\n");
+  // dump("cspObserver - topic (" + aTopic + ") - url: " + channel.URI.spec + "\n");
   try {
     var httpChannel = channel.QueryInterface(Ci.nsIHttpChannel);
     // dump("cspObserver - httpChannel - responseStatus: " + httpChannel.responseStatus + "\n");
@@ -141,6 +170,11 @@ function cspObserver(aSubject, aTopic, aData) {
     }
   } catch (e) {
     // dump("cspObserver - httpChannel - file:/// URIs? - e: " + e + "\n");
+    return;
+  }
+
+  if (!GM_util.isGreasemonkeyable(channel.URI.spec)) {
+    // dump("cspObserver - isGreasemonkeyable (false) - url: " + channel.URI.spec + "\n");
     return;
   }
 
@@ -350,8 +384,8 @@ for (var observer in gCspObservers) {
       try {
         cspObserver(aSubject, aTopic, aData);
       } catch (e) {
-        dump("Greasemonkey install observer failed:\n" + e + "\n");
+        dump("Greasemonkey csp observer failed:\n" + e + "\n");
       }
     }
-  }, gCspObservers[observer], false);
+  }, gCspObservers[observer].value, false);
 }
